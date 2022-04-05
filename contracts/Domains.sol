@@ -9,12 +9,14 @@ contract Domains {
     mapping(string => address) public domains;
     mapping(string => string) public records;
 
+    string public tld;
+
     constructor(string memory _tld) payable {
         tld = _tld;
         console.log("%s name service deployed", _tld);
     }
 
-    function register(string calldata name) public {
+    function register(string calldata name) public payable {
         require(domains[name] == address(0));
 
         uint _price = price(name);
