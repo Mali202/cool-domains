@@ -31,11 +31,39 @@ contract Domains is ERC721URIStorage {
         require(domains[name] == address(0));
 
         uint _price = price(name);
-
         require(msg.value >= _price, "Not enough Matic paid");
 
+        string memory _name = string(abi.encodePacked(name, ".", tld));
+        string memory finalSvg = string(abi.encodePacked(svgPartOne, _name, svgPartTwo));
+        uint256 newRecordId = _tokenIds.current();
+        uint256 length = StringUtils.strlen(name);
+        string memory strLen = Strings.toString(length);
+
+        console.log("Registering %s on the contract with tokenID %d", name, newRecordId);
+
+        string memory json = Base64.encode(
+            abi.encodePacked(
+                '{"name": "',
+                _name,
+                '", "description": "A domain on the Creed name service", "image": "data:image/svg+xml;base64,',
+                Base64.encode(bytes(finalSvg)),
+                '","length":"',
+                strLen,
+                '"}'
+            )
+        );
+
+        string memory finalTokenUri = string( abi.encodePacked("data:application/json;base64,", json));
+
+        console.log("\n--------------------------------------------------------");
+        console.log("Final tokenURI", finalTokenUri);
+        console.log("--------------------------------------------------------\n");
+
+        _safeMint(msg.sender, newRecordId);
+        _setTokenURI(newRecordId, finalTokenUri);
         domains[name] = msg.sender;
-        console.log("%s has registered a domain!", msg.sender);
+
+        _tokenIds.increment();
     }
 
     function getAddress(string calldata name) public view returns (address) {
