@@ -25,6 +25,10 @@ contract Domains is ERC721URIStorage {
 
     address payable public owner;
 
+    error Unauthorized();
+    error AlreadyRegistered();
+    error InvalidName(string name);
+
     constructor(string memory _tld) payable ERC721("Creed Name Service", "CNS"){
         owner = payable(msg.sender);
         tld = _tld;
@@ -32,7 +36,8 @@ contract Domains is ERC721URIStorage {
     }
 
     function register(string calldata name) public payable {
-        require(domains[name] == address(0));
+        if (domains[name] != address(0)) revert AlreadyRegistered();
+        if (!valid(name)) revert InvalidName(name);
 
         uint _price = price(name);
         require(msg.value >= _price, "Not enough Matic paid");
@@ -76,7 +81,7 @@ contract Domains is ERC721URIStorage {
     }
 
     function setRecord(string calldata name, string calldata record) public {
-        require(domains[name] == msg.sender);
+        if (msg.sender != domains[name]) revert Unauthorized();
         records[name] = record;
     }
 
@@ -121,5 +126,9 @@ contract Domains is ERC721URIStorage {
         }
 
         return allNames;
+    }
+
+    function valid(string calldata name) public pure returns(bool) {
+        return StringUtils.strlen(name) >= 3 && StringUtils.strlen(name) <= 10;
     }
 }
